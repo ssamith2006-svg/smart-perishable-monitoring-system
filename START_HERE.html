@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Perishable | Presentation Hub</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --primary: #6366f1; --success: #10b981; --text: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .hub-card { background: var(--card); padding: 40px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; max-width: 500px; width: 90%; }
+        .logo { font-size: 48px; margin-bottom: 16px; }
+        h1 { margin: 0; font-size: 28px; }
+        p { color: #94a3b8; margin-bottom: 32px; }
+        .btn { display: block; background: var(--primary); color: white; text-decoration: none; padding: 16px; border-radius: 12px; font-weight: 600; margin-bottom: 12px; transition: 0.3s; }
+        .btn:hover { background: #4f46e5; transform: translateY(-2px); }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #059669; }
+        .footer { margin-top: 24px; font-size: 12px; color: #475569; }
+    </style>
+</head>
+<body>
+    <div class="hub-card">
+        <div class="logo">🥬</div>
+        <h1>Smart Perishable</h1>
+        <p>Presentation Hub & Entry Point</p>
+        
+        <a href="frontend/dashboard.html" class="btn btn-success">📊 Start Presentation (Dashboard)</a>
+        <a href="frontend/inventory.html" class="btn">📦 View Inventory Management</a>
+        <a href="frontend/scanner.html" class="btn">📡 Open RFID/Barcode Scanner</a>
+        <a href="viva_presentation_guide.md" class="btn" style="background: #334155;">📋 Viva Q&A Guide</a>
+
+        <div class="footer">
+            Note: Authentication is bypassed for the demo.
+        </div>
+    </div>
+</body>
+</html>

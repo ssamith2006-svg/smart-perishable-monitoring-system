@@ -1,0 +1,25 @@
+# Java build artifacts
+backend/target/
+backend/apache-maven-3.8.8/
+backend/apache-maven-3.9.6/
+backend/maven.zip
+*.class
+
+# Archives and large files
+*.zip
+*.tar.gz
+*.rar
+
+# IDE and System Files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log

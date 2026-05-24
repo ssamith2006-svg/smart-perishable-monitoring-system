@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts | Smart Perishable Monitoring</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><div class="brand-icon">🥬</div><div class="brand-text"><div class="brand-name">SmartPerishable</div><div class="brand-sub">Monitoring System</div></div></div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="inventory.html" class="nav-item"><span class="nav-icon">📦</span> Inventory</a>
+                <a href="scanner.html" class="nav-item"><span class="nav-icon">📡</span> Scanner</a>
+                <div class="nav-section-title">Analytics</div>
+                <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span> Reports</a>
+                <a href="alerts.html" class="nav-item active"><span class="nav-icon">🔔</span> Alerts</a>
+                <div class="nav-section-title">System</div>
+                <a href="users.html" class="nav-item"><span class="nav-icon">👤</span> Users</a>
+            </nav>
+            <div class="sidebar-footer"><div class="user-info"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><div class="user-name" id="userName">Admin</div><div class="user-role" id="userRole">Administrator</div></div></div></div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left"><div><h1>Alerts & Notifications</h1><div class="page-subtitle">Expiry warnings, low stock, and deadstock alerts</div></div></div>
+                <div class="header-right">
+                    <button class="btn btn-outline" onclick="markAllRead()">✅ Mark All Read</button>
+                    <button class="btn btn-primary" onclick="runExpiryCheck()">⚡ Run Check</button>
+                    <button class="header-btn" onclick="logout()">🚪</button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="filter-bar">
+                    <button class="filter-chip active" onclick="filterAlerts('all', this)">All</button>
+                    <button class="filter-chip" onclick="filterAlerts('NEAR_EXPIRY', this)">⏰ Near Expiry</button>
+                    <button class="filter-chip" onclick="filterAlerts('EXPIRED', this)">❌ Expired</button>
+                    <button class="filter-chip" onclick="filterAlerts('LOW_STOCK', this)">📦 Low Stock</button>
+                    <button class="filter-chip" onclick="filterAlerts('DEADSTOCK', this)">⚠️ Deadstock</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🔔 All Alerts <span style="color:var(--text-muted); font-size:13px;" id="alertCount">(0)</span></h3>
+                    </div>
+                    <div class="card-body" id="alertsContainer" style="max-height: 70vh; overflow-y: auto;">
+                        <div style="text-align:center; padding:60px; color:var(--text-muted);">Loading alerts...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let allAlerts = [];
+        const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+        if (!user) window.location.href = 'login.html';
+        else {
+            document.getElementById('userName').textContent = user.fullName || user.username;
+            document.getElementById('userRole').textContent = user.role === 'ADMIN' ? 'Administrator' : 'Staff';
+            document.getElementById('userAvatar').textContent = (user.fullName || user.username).charAt(0).toUpperCase();
+        }
+
+        async function loadAlerts() {
+            try {
+                const res = await fetch(`${API_BASE}/alerts`);
+                allAlerts = await res.json();
+                renderAlerts(allAlerts);
+            } catch (e) { showToast('Failed to load alerts', 'error'); }
+        }
+
+        function renderAlerts(alerts) {
+            const container = document.getElementById('alertsContainer');
+            document.getElementById('alertCount').textContent = `(${alerts.length})`;
+
+            if (!alerts.length) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔕</div><h3>No alerts</h3><p>Everything is running smoothly!</p></div>';
+                return;
+            }
+
+            container.innerHTML = alerts.map(alert => {
+                const typeClass = alert.alertType === 'EXPIRED' ? 'expired' : alert.alertType === 'NEAR_EXPIRY' ? 'expiry' : alert.alertType === 'LOW_STOCK' ? 'low-stock' : 'deadstock';
+                const icon = alert.alertType === 'EXPIRED' ? '❌' : alert.alertType === 'NEAR_EXPIRY' ? '⏰' : alert.alertType === 'LOW_STOCK' ? '📦' : '⚠️';
+                const severityClass = alert.severity === 'CRITICAL' ? 'critical' : alert.severity === 'HIGH' ? 'high' : 'medium';
+                const time = new Date(alert.createdAt).toLocaleString();
+                const unreadStyle = alert.isRead ? '' : 'border-left: 3px solid var(--primary);';
+
+                return `<div class="alert-item ${typeClass}" style="${unreadStyle}" onclick="markRead(${alert.id}, this)">
+                    <div class="alert-icon">${icon}</div>
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                            <span class="badge-status ${severityClass}" style="font-size:10px;">${alert.severity}</span>
+                            <span style="font-size:12px; color:var(--text-muted);">${alert.alertType.replace('_', ' ')}</span>
+                            ${!alert.isRead ? '<span style="width:8px; height:8px; background:var(--primary); border-radius:50%; display:inline-block;"></span>' : ''}
+                        </div>
+                        <div class="alert-text">${alert.message}</div>
+                        <div class="alert-time">${time}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function filterAlerts(type, el) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            if (el) el.classList.add('active');
+            const filtered = type === 'all' ? allAlerts : allAlerts.filter(a => a.alertType === type);
+            renderAlerts(filtered);
+        }
+
+        async function markRead(id, el) {
+            try {
+                await fetch(`${API_BASE}/alerts/${id}/read`, { method: 'PUT' });
+                if (el) el.style.borderLeft = 'none';
+                loadAlerts();
+            } catch (e) { console.error(e); }
+        }
+
+        async function markAllRead() {
+            try {
+                await fetch(`${API_BASE}/alerts/read-all`, { method: 'PUT' });
+                showToast('All alerts marked as read', 'success');
+                loadAlerts();
+            } catch (e) { showToast('Failed', 'error'); }
+        }
+
+        async function runExpiryCheck() {
+            try {
+                await fetch(`${API_BASE}/dashboard/check-expiry`, { method: 'POST' });
+                showToast('Expiry check completed!', 'success');
+                setTimeout(loadAlerts, 500);
+            } catch (e) { showToast('Failed', 'error'); }
+        }
+
+        function logout() { sessionStorage.removeItem('user'); window.location.href = 'login.html'; }
+        function showToast(msg, type='info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<span>${msg}</span>`;
+            c.appendChild(t); setTimeout(()=>t.remove(), 3000);
+        }
+
+        loadAlerts();
+    </script>
+</body>
+</html>

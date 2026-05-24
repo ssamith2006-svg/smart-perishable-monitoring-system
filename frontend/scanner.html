@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Smart Perishable Monitoring - RFID/Barcode Scanner">
+    <title>Scanner | Smart Perishable Monitoring</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><div class="brand-icon">🥬</div><div class="brand-text"><div class="brand-name">SmartPerishable</div><div class="brand-sub">Monitoring System</div></div></div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="inventory.html" class="nav-item"><span class="nav-icon">📦</span> Inventory</a>
+                <a href="scanner.html" class="nav-item active"><span class="nav-icon">📡</span> Scanner</a>
+                <div class="nav-section-title">Analytics</div>
+                <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span> Reports</a>
+                <a href="alerts.html" class="nav-item"><span class="nav-icon">🔔</span> Alerts</a>
+                <div class="nav-section-title">System</div>
+                <a href="users.html" class="nav-item"><span class="nav-icon">👤</span> Users</a>
+            </nav>
+            <div class="sidebar-footer"><div class="user-info"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><div class="user-name" id="userName">Admin</div><div class="user-role" id="userRole">Administrator</div></div></div></div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left"><div><h1>Scanner Module</h1><div class="page-subtitle">Scan RFID tags or barcodes to locate & manage items</div></div></div>
+                <div class="header-right"><button class="header-btn" onclick="logout()">🚪</button></div>
+            </header>
+
+            <div class="page-content">
+                <div class="grid-2">
+                    <!-- RFID SCANNER -->
+                    <div class="card">
+                        <div class="card-header"><h3>📡 RFID Tag Scanner</h3></div>
+                        <div class="card-body">
+                            <div class="scanner-area" onclick="document.getElementById('rfidInput').focus()">
+                                <div class="scanner-icon">📡</div>
+                                <h3>Scan RFID Tag</h3>
+                                <p>Click here and enter the RFID tag to locate an item</p>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <div class="form-group">
+                                    <label>Enter RFID Tag</label>
+                                    <div style="display:flex; gap:10px;">
+                                        <input class="form-control" id="rfidInput" placeholder="e.g. RFID-MLK-001">
+                                        <button class="btn btn-primary" onclick="scanRfid()">Scan</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BARCODE SCANNER -->
+                    <div class="card">
+                        <div class="card-header"><h3>📷 Barcode Scanner</h3></div>
+                        <div class="card-body">
+                            <div class="scanner-area" onclick="document.getElementById('barcodeInput').focus()">
+                                <div class="scanner-icon">📷</div>
+                                <h3>Scan Barcode</h3>
+                                <p>Click here and enter the barcode to find a product</p>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <div class="form-group">
+                                    <label>Enter Barcode</label>
+                                    <div style="display:flex; gap:10px;">
+                                        <input class="form-control" id="barcodeInput" placeholder="e.g. BAR001">
+                                        <button class="btn btn-primary" onclick="scanBarcode()">Scan</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BIN LOCATION SEARCH -->
+                <div class="card" style="margin-top:24px;">
+                    <div class="card-header"><h3>📍 Bin Location Search</h3></div>
+                    <div class="card-body">
+                        <div style="display:flex; gap:10px; max-width:500px; margin-bottom:20px;">
+                            <input class="form-control" id="binInput" placeholder="e.g. Aisle-1">
+                            <button class="btn btn-primary" onclick="searchBin()">Search</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCAN RESULT -->
+                <div class="card" style="margin-top:24px; display:none;" id="scanResult">
+                    <div class="card-header">
+                        <h3>🔍 Scan Result</h3>
+                        <button class="btn btn-outline btn-sm" onclick="document.getElementById('scanResult').style.display='none'">Close</button>
+                    </div>
+                    <div class="card-body" id="scanResultBody"></div>
+                </div>
+
+                <!-- BIN RESULTS TABLE -->
+                <div class="card" style="margin-top:24px; display:none;" id="binResults">
+                    <div class="card-header"><h3>📍 Bin Location Results</h3></div>
+                    <div class="card-body" style="padding:0;">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead><tr><th>Product</th><th>Batch</th><th>RFID</th><th>Bin</th><th>Qty</th><th>Expiry</th><th>Status</th></tr></thead>
+                                <tbody id="binResultsBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        // Auth check - UPDATED FOR PRESENTATION (Auto-login)
+        let user = JSON.parse(sessionStorage.getItem('user') || 'null');
+        if (!user) {
+            user = { success: true, userId: 1, username: 'admin', fullName: 'Admin (Auto-Login)', role: 'ADMIN', isDemo: true };
+            sessionStorage.setItem('user', JSON.stringify(user));
+        }
+        document.getElementById('userName').textContent = user.fullName || user.username;
+        document.getElementById('userRole').textContent = user.role === 'ADMIN' ? 'Administrator' : 'Staff';
+        document.getElementById('userAvatar').textContent = (user.fullName || user.username).charAt(0).toUpperCase();
+
+        async function scanRfid() {
+            const tag = document.getElementById('rfidInput').value.trim();
+            if (!tag) { showToast('Enter an RFID tag', 'warning'); return; }
+            try {
+                const res = await fetch(`${API_BASE}/inventory/search/rfid/${tag}`);
+                const data = await res.json();
+                if (data.found === false) {
+                    showScanResult('<div class="empty-state"><div class="empty-icon">❓</div><h3>RFID Tag Not Found</h3><p>No item matches the tag: ' + tag + '</p></div>');
+                } else {
+                    showBatchResult(data);
+                }
+            } catch (e) { showToast('Scan failed', 'error'); }
+        }
+
+        async function scanBarcode() {
+            const barcode = document.getElementById('barcodeInput').value.trim();
+            if (!barcode) { showToast('Enter a barcode', 'warning'); return; }
+            try {
+                const res = await fetch(`${API_BASE}/products/barcode/${barcode}`);
+                const data = await res.json();
+                if (data.found === false) {
+                    showScanResult('<div class="empty-state"><div class="empty-icon">❓</div><h3>Barcode Not Found</h3><p>No product matches: ' + barcode + '</p></div>');
+                } else {
+                    showProductResult(data);
+                }
+            } catch (e) { showToast('Scan failed', 'error'); }
+        }
+
+        async function searchBin() {
+            const loc = document.getElementById('binInput').value.trim();
+            if (!loc) { showToast('Enter a bin location', 'warning'); return; }
+            try {
+                const res = await fetch(`${API_BASE}/inventory/search/bin/${loc}`);
+                const data = await res.json();
+                const container = document.getElementById('binResults');
+                const tbody = document.getElementById('binResultsBody');
+                container.style.display = 'block';
+
+                if (!data.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="padding:40px; text-align:center; color:var(--text-muted);">No items found at this location</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(b => {
+                    const days = Math.ceil((new Date(b.expiryDate) - new Date()) / (1000*60*60*24));
+                    const statusClass = b.status === 'ACTIVE' ? 'active' : b.status === 'NEAR_EXPIRY' ? 'near-expiry' : b.status === 'EXPIRED' ? 'expired' : 'discarded';
+                    return `<tr>
+                        <td style="font-weight:600; color:var(--text-primary);">${b.product?.name || 'N/A'}</td>
+                        <td>${b.batchNumber}</td>
+                        <td style="font-family:monospace; color:var(--secondary);">${b.rfidTag}</td>
+                        <td>📍 ${b.binLocation}</td>
+                        <td>${b.quantity}</td>
+                        <td>${b.expiryDate} <span style="color:${days < 0 ? 'var(--danger)' : days <= 7 ? 'var(--accent)' : 'var(--success)'};">(${days}d)</span></td>
+                        <td><span class="badge-status ${statusClass}">${b.status}</span></td>
+                    </tr>`;
+                }).join('');
+            } catch (e) { showToast('Search failed', 'error'); }
+        }
+
+        function showBatchResult(batch) {
+            const days = Math.ceil((new Date(batch.expiryDate) - new Date()) / (1000*60*60*24));
+            showScanResult(`
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                    <div>
+                        <h4 style="margin-bottom:16px; color:var(--primary-light);">📡 RFID Scan Result</h4>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">PRODUCT</span><br><strong style="font-size:18px;">${batch.product?.name || 'N/A'}</strong></div>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">BATCH</span><br><strong>${batch.batchNumber}</strong></div>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">RFID TAG</span><br><strong style="color:var(--secondary);font-family:monospace;">${batch.rfidTag}</strong></div>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom:16px; color:var(--accent);">📍 Location & Status</h4>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">BIN LOCATION</span><br><strong style="font-size:16px;">📍 ${batch.binLocation}</strong></div>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">QUANTITY</span><br><strong style="font-size:24px;">${batch.quantity}</strong></div>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">EXPIRY</span><br><strong>${batch.expiryDate}</strong> <span style="color:${days < 0 ? 'var(--danger)' : days <= 7 ? 'var(--accent)' : 'var(--success)'}; font-weight:700;">(${days} days)</span></div>
+                        <div><span style="color:var(--text-muted);font-size:12px;">STATUS</span><br><span class="badge-status ${batch.status === 'ACTIVE' ? 'active' : batch.status === 'NEAR_EXPIRY' ? 'near-expiry' : 'expired'}">${batch.status}</span></div>
+                    </div>
+                </div>
+            `);
+        }
+
+        function showProductResult(product) {
+            showScanResult(`
+                <div>
+                    <h4 style="margin-bottom:16px; color:var(--primary-light);">📷 Barcode Scan Result</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">PRODUCT NAME</span><br><strong style="font-size:18px;">${product.name}</strong></div>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">CATEGORY</span><br><strong>${product.category}</strong></div>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">BARCODE</span><br><strong style="font-family:monospace; color:var(--secondary);">${product.barcode}</strong></div>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">BASE PRICE</span><br><strong style="font-size:20px; color:var(--success);">$${product.basePrice}</strong></div>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">UNIT</span><br><strong>${product.unit}</strong></div>
+                        <div style="margin-bottom:12px;"><span style="color:var(--text-muted);font-size:12px;">PERISHABLE</span><br><strong>${product.isPerishable ? '✅ Yes' : '❌ No'}</strong></div>
+                    </div>
+                    <a href="inventory.html" class="btn btn-primary" style="margin-top:12px;">View Inventory Batches →</a>
+                </div>
+            `);
+        }
+
+        function showScanResult(html) {
+            const container = document.getElementById('scanResult');
+            container.style.display = 'block';
+            document.getElementById('scanResultBody').innerHTML = html;
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function logout() { sessionStorage.removeItem('user'); window.location.href = 'login.html'; }
+        function showToast(msg, type='info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<span>${msg}</span>`;
+            c.appendChild(t); setTimeout(()=>t.remove(), 3000);
+        }
+
+        // Allow Enter key on inputs
+        document.getElementById('rfidInput').addEventListener('keydown', e => { if(e.key==='Enter') scanRfid(); });
+        document.getElementById('barcodeInput').addEventListener('keydown', e => { if(e.key==='Enter') scanBarcode(); });
+        document.getElementById('binInput').addEventListener('keydown', e => { if(e.key==='Enter') searchBin(); });
+    </script>
+</body>
+</html>

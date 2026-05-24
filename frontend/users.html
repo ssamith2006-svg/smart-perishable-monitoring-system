@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users | Smart Perishable Monitoring</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><div class="brand-icon">🥬</div><div class="brand-text"><div class="brand-name">SmartPerishable</div><div class="brand-sub">Monitoring System</div></div></div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="inventory.html" class="nav-item"><span class="nav-icon">📦</span> Inventory</a>
+                <a href="scanner.html" class="nav-item"><span class="nav-icon">📡</span> Scanner</a>
+                <div class="nav-section-title">Analytics</div>
+                <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span> Reports</a>
+                <a href="alerts.html" class="nav-item"><span class="nav-icon">🔔</span> Alerts</a>
+                <div class="nav-section-title">System</div>
+                <a href="users.html" class="nav-item active"><span class="nav-icon">👤</span> Users</a>
+            </nav>
+            <div class="sidebar-footer"><div class="user-info"><div class="user-avatar" id="userAvatar">A</div><div class="user-details"><div class="user-name" id="userName">Admin</div><div class="user-role" id="userRole">Administrator</div></div></div></div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left"><div><h1>User Management</h1><div class="page-subtitle">Manage admin and staff accounts</div></div></div>
+                <div class="header-right">
+                    <button class="btn btn-primary" onclick="openAddUserModal()" id="addUserBtn">➕ Add User</button>
+                    <button class="header-btn" onclick="logout()">🚪</button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- Role Info Cards -->
+                <div class="grid-2" style="margin-bottom:28px;">
+                    <div class="card">
+                        <div class="card-body" style="display:flex; align-items:center; gap:20px;">
+                            <div style="width:56px; height:56px; background:linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:28px;">👨‍💼</div>
+                            <div>
+                                <h3 style="font-size:20px; font-weight:700;">Admin Role</h3>
+                                <p style="color:var(--text-muted); font-size:13px;">Full control — manage products, inventory, users, reports, and system settings.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body" style="display:flex; align-items:center; gap:20px;">
+                            <div style="width:56px; height:56px; background:linear-gradient(135deg, var(--secondary), #0891b2); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:28px;">👤</div>
+                            <div>
+                                <h3 style="font-size:20px; font-weight:700;">Staff Role</h3>
+                                <p style="color:var(--text-muted); font-size:13px;">Limited access — scan items, view inventory, and process sales.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>👥 All Users <span style="color:var(--text-muted); font-size:13px;" id="userCount">(0)</span></h3>
+                    </div>
+                    <div class="card-body" style="padding:0;">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Full Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Last Login</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersBody">
+                                    <tr><td colspan="8" style="padding:60px; text-align:center; color:var(--text-muted);">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ADD USER MODAL -->
+    <div class="modal-overlay" id="addUserModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>➕ Add New User</h3>
+                <button class="modal-close" onclick="closeModal('addUserModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="form-row">
+                        <div class="form-group"><label>Username</label><input class="form-control" id="uUsername" required placeholder="e.g. john_doe"></div>
+                        <div class="form-group"><label>Password</label><input class="form-control" id="uPassword" type="password" required placeholder="Min 6 characters"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Full Name</label><input class="form-control" id="uFullName" required placeholder="e.g. John Doe"></div>
+                        <div class="form-group"><label>Email</label><input class="form-control" id="uEmail" type="email" placeholder="e.g. john@store.com"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select class="form-control" id="uRole">
+                            <option value="STAFF">Staff (Limited Access)</option>
+                            <option value="ADMIN">Admin (Full Control)</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addUserModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="addUser()">Create User</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+        if (!user) window.location.href = 'login.html';
+        else {
+            document.getElementById('userName').textContent = user.fullName || user.username;
+            document.getElementById('userRole').textContent = user.role === 'ADMIN' ? 'Administrator' : 'Staff';
+            document.getElementById('userAvatar').textContent = (user.fullName || user.username).charAt(0).toUpperCase();
+            // Only admins can add users
+            if (user.role !== 'ADMIN') {
+                document.getElementById('addUserBtn').style.display = 'none';
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${API_BASE}/auth/users`);
+                const users = await res.json();
+                document.getElementById('userCount').textContent = `(${users.length})`;
+
+                document.getElementById('usersBody').innerHTML = users.map(u => {
+                    const roleColor = u.role === 'ADMIN' ? 'var(--primary-light)' : 'var(--secondary)';
+                    const roleIcon = u.role === 'ADMIN' ? '👨‍💼' : '👤';
+                    return `<tr>
+                        <td style="color:var(--text-muted);">#${u.id}</td>
+                        <td style="font-weight:600; color:var(--text-primary);">${u.username}</td>
+                        <td>${u.fullName}</td>
+                        <td style="color:var(--text-muted);">${u.email || '-'}</td>
+                        <td><span style="color:${roleColor}; font-weight:600;">${roleIcon} ${u.role}</span></td>
+                        <td><span class="badge-status ${u.isActive ? 'active' : 'discarded'}">${u.isActive ? 'Active' : 'Disabled'}</span></td>
+                        <td style="color:var(--text-muted); font-size:12px;">${u.lastLogin ? new Date(u.lastLogin).toLocaleString() : 'Never'}</td>
+                        <td style="color:var(--text-muted); font-size:12px;">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-'}</td>
+                    </tr>`;
+                }).join('');
+            } catch (e) {
+                showToast('Failed to load users', 'error');
+            }
+        }
+
+        function openAddUserModal() {
+            document.getElementById('addUserModal').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        async function addUser() {
+            try {
+                const newUser = {
+                    username: document.getElementById('uUsername').value,
+                    password: document.getElementById('uPassword').value,
+                    fullName: document.getElementById('uFullName').value,
+                    email: document.getElementById('uEmail').value,
+                    role: document.getElementById('uRole').value
+                };
+
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newUser)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('User created successfully!', 'success');
+                    closeModal('addUserModal');
+                    document.getElementById('userForm').reset();
+                    loadUsers();
+                } else {
+                    showToast(data.message || 'Failed to create user', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to create user', 'error');
+            }
+        }
+
+        function logout() { sessionStorage.removeItem('user'); window.location.href = 'login.html'; }
+        function showToast(msg, type='info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<span>${msg}</span>`;
+            c.appendChild(t); setTimeout(()=>t.remove(), 3000);
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>
