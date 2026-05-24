@@ -1,5 +1,7 @@
 # 🥬 Smart Perishable Monitoring System
 
+[![GitHub repository](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/ssamith2006-svg/smart-perishable-monitoring-system)
+
 A comprehensive web-based monitoring system designed for large-scale supermarkets to track perishable inventory, manage expiry dates, and optimize stock management using RFID-based bin location tracking.
 
 ## 📋 Project Description
